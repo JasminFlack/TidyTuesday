@@ -6,4 +6,4 @@ Weekly Tidy Tuesday Exercises
 
 My first Tidy Tuesday! 
 
-![Marble Races](Week23_MarbleRacing/MarblesPlot.png =85x)
+![Marble Races](Week23_MarbleRacing/MarblesPlot.png)
