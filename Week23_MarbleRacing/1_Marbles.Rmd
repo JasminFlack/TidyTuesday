@@ -1,0 +1,55 @@
+---
+title: "Marbles"
+output: html_notebook
+---
+
+
+
+```{r}
+marbles <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-06-02/marbles.csv')
+library(tidyverse)
+```
+
+```{r}
+top_marbles <- marbles %>% filter(str_detect(race, "R")) %>% group_by(marble_name) %>% summarise(avg_time = mean(time_s)) %>% arrange(avg_time)
+
+marbles$date<- parse_date(marbles$date, format = "%d-%b-%y")
+
+ggplot(top_marbles[1:10,]) + 
+  geom_bar(aes(x=reorder(marble_name, avg_time), y=avg_time), 
+           stat = "identity", fill="lightblue") + 
+  coord_cartesian(ylim=c(320,340)) + ylab("Average Race Time") + 
+  xlab("Marble") + ggtitle("Top 10 Marbles") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+  
+marbles %>% filter(marble_name == "Smoggy") %>% filter(str_detect(race, "R")) %>% 
+  ggplot(aes(x=date, y=avg_time_lap, group=1)) + geom_line(color="lightblue") +
+  geom_point(color="blue") +
+  labs(title = "Smoggy's Races", y="time") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+marbles %>% filter(race=="S1R6")
+
+marbles %>% filter(str_detect(race, "R")) %>% 
+  ggplot(aes(x=number_laps, y=avg_time_lap, group= number_laps)) +
+  geom_boxplot()
+  
+marbles %>% filter(str_detect(race, "R")) %>% 
+  ggplot(aes(x=number_laps, y=track_length_m)) +
+  geom_jitter()
+
+marbles %>% group_by(number_laps, track_length_m) %>% summarise(mean(avg_time_lap, na.rm = T))
+
+marbles %>% filter(str_detect(race, "R")) %>% 
+  ggplot(aes(x=track_length_m, y=avg_time_lap)) +
+  geom_jitter()
+
+marbles %>% filter(str_detect(race, "R")) %>% group_by(marble_name) %>% summarise(avg_track_length = mean(track_length_m), avg_time= mean(time_s, na.rm = T)) %>% arrange(avg_track_length) %>% 
+  ggplot(aes(x=avg_track_length, y=avg_time)) +
+  geom_jitter()
+  
+
+```
+
+
