@@ -4,52 +4,47 @@ output: html_notebook
 ---
 
 
-
+##Import data and necessary libraries
 ```{r}
 marbles <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-06-02/marbles.csv')
 library(tidyverse)
 ```
 
+## Data Manipulation and Plot
 ```{r}
-top_marbles <- marbles %>% filter(str_detect(race, "R")) %>% group_by(marble_name) %>% summarise(avg_time = mean(time_s)) %>% arrange(avg_time)
+marble_ranks <- marbles %>% select(-notes, -host, -site, -source) %>% filter(str_detect(race, "R")) %>% group_by(marble_name) %>% summarise(marble_time=mean(time_s,na.rm = T)) %>% mutate(marble_rank= rank(marble_time))
 
-marbles$date<- parse_date(marbles$date, format = "%d-%b-%y")
+team_ranks <- marbles %>% select(-notes, -host, -site, -source) %>% filter(str_detect(race, "R")) %>% group_by(team_name) %>% summarise(team_time=mean(time_s, na.rm = T)) %>% mutate(team_rank= rank(team_time)) 
 
-ggplot(top_marbles[1:10,]) + 
-  geom_bar(aes(x=reorder(marble_name, avg_time), y=avg_time), 
-           stat = "identity", fill="lightblue") + 
-  coord_cartesian(ylim=c(320,340)) + ylab("Average Race Time") + 
-  xlab("Marble") + ggtitle("Top 10 Marbles") +
-  theme(plot.title = element_text(hjust = 0.5))
+full_ranks <- marbles %>% select(-notes, -host, -site, -source, -pole) %>% filter(str_detect(race, "R")) %>% left_join(marble_ranks, by='marble_name') %>% left_join(team_ranks, by= 'team_name') 
 
-  
-marbles %>% filter(marble_name == "Smoggy") %>% filter(str_detect(race, "R")) %>% 
-  ggplot(aes(x=date, y=avg_time_lap, group=1)) + geom_line(color="lightblue") +
-  geom_point(color="blue") +
-  labs(title = "Smoggy's Races", y="time") +
-  theme(plot.title = element_text(hjust = 0.5))
 
-marbles %>% filter(race=="S1R6")
+ggplot(full_ranks) +
+  geom_point(aes(x=team_rank, y=marble_rank, color=team_rank)) +
+  ylim(0,32)+
+  scale_color_gradient2(low="blue", mid="white",
+                     high="red", space ="Lab" ) +
+  labs(y="Marble Rank", x="Team Rank", title ="Rank of Marbles in Each Team", 
+       subtitle = "One might think they best teams have the best marbles,\n but most teams have a range of marble 'skill'",
+       caption = "@Jasmin Flack | TidyTuesday") +
+  scale_x_continuous(breaks=seq(0,16,1)) +
+  theme(legend.position = "none") +
+  theme(plot.margin=unit(c(.8,1,1,1),"cm"),
+        plot.background = element_rect(fill= "#444B5A", color = "#444B5A"),
+        panel.background = element_rect(fill = "#444B5A", color = "transparent"),
+        axis.title = element_text(size = 14, color = '#969696'),
+        axis.text = element_text(color = "#969696"),
+        panel.grid = element_line(color = "#666583"),
+        axis.ticks = element_line(color = "#666583"),
+        plot.title = element_text(hjust = 0.5, size = 20, color = "#bdbdc9", face = "bold"),
+        plot.subtitle = element_text(color = "#bdbdc9", hjust = 0.5, face='italic'),
+        plot.caption = element_text(color = "#bdbdc9"),
+        axis.title.x = element_text(vjust=-1))
 
-marbles %>% filter(str_detect(race, "R")) %>% 
-  ggplot(aes(x=number_laps, y=avg_time_lap, group= number_laps)) +
-  geom_boxplot()
-  
-marbles %>% filter(str_detect(race, "R")) %>% 
-  ggplot(aes(x=number_laps, y=track_length_m)) +
-  geom_jitter()
-
-marbles %>% group_by(number_laps, track_length_m) %>% summarise(mean(avg_time_lap, na.rm = T))
-
-marbles %>% filter(str_detect(race, "R")) %>% 
-  ggplot(aes(x=track_length_m, y=avg_time_lap)) +
-  geom_jitter()
-
-marbles %>% filter(str_detect(race, "R")) %>% group_by(marble_name) %>% summarise(avg_track_length = mean(track_length_m), avg_time= mean(time_s, na.rm = T)) %>% arrange(avg_track_length) %>% 
-  ggplot(aes(x=avg_track_length, y=avg_time)) +
-  geom_jitter()
-  
+ggsave("MarblesPlot.png",width = 8, height = 5, units = 'in', dpi = 300)
 
 ```
+
+
 
 
